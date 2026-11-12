@@ -137,7 +137,7 @@ body.quizmode #quiz{flex:1;min-height:0;display:flex;flex-direction:column}
     <div style="font-weight:700">Hangi soruları çalışmak istersin?</div>
     <div class="sets" id="sets"></div>
     <label class="check"><input type="checkbox" id="shuffle" checked> Soruları karışık sırayla sor</label>
-    <div class="actions"><button class="btn primary" id="startBtn">Başla</button></div>
+    <div class="actions"><button class="btn primary hidden" id="resumeBtn">Devam Et</button><button class="btn primary" id="startBtn">Başla</button></div>
     <div class="note">Bu bir sınav hazırlık materyalidir. Gerçek acil durumlarda 112'nin yönlendirmeleri ve güncel ilk yardım eğitimi esas alınmalıdır.</div>
   </section>
 
@@ -193,6 +193,7 @@ const EXTRA = {
   8:['kaşık tekniği'],
   11:['zaman','time'],
   14:['yiyecek','içecek','yiyecek ve içecek','hiçbir şey','bir şey','gıda'],
+  17:['arter','arter kanaması','atardamar kanaması','arteriyel kanama'],
   18:['bez','temiz bez','gazlı bez','ikinci bez','ikinci bir bez','yeni bez','ek bez'],
   19:['saat','uygulama saati','zaman','uygulama zamanı'],
   21:['ileri'],
@@ -222,8 +223,9 @@ function matches(input, alts){
     a = norm(a); if(!a) return false;
     if(x===a) return true;
     // typed answer contains the expected answer, e.g. "derlenme pozisyonu"
+    if((' '+x+' ').includes(' '+a+' ')) return true;
     if(a.length>=3 && (' '+x+' ').includes(' '+a)) return true;
-    const tol = a.length>=8 ? 2 : a.length>=4 ? 1 : 0;
+    const tol = a.length>=5 ? 1 : 0;
     if(lev(x,a)<=tol) return true;
     // typed answer starts with the expected word but has a suffix (Turkish inflection)
     if(a.length>=5 && x.startsWith(a) && x.length-a.length<=4) return true;
@@ -249,6 +251,7 @@ function renderSets(){
 function show(id){['start','quiz','end'].forEach(s=>$(s).classList.toggle('hidden',s!==id));document.body.classList.toggle('quizmode',id==='quiz');window.scrollTo(0,0);}
 
 function begin(list){
+  $('resumeBtn').classList.add('hidden'); $('startBtn').textContent='Başla'; $('startBtn').classList.add('primary');
   queue = $('shuffle').checked ? shuffle(list) : list.slice();
   idx = 0; ok = 0; wrongList = [];
   show('quiz'); renderQ();
@@ -340,7 +343,7 @@ function acceptAnyway(){
   // user's fill-in answer was marked wrong but they consider it correct
   ok++; wrongList.pop(); state.correct = true;
   $('answers').querySelectorAll('input').forEach(i=>{i.classList.remove('bad');i.classList.add('ok');});
-  feedback(true); setActions();
+  feedback(true); revealAnswer(false); setActions();
   $('pos').textContent = `${idx+1} / ${queue.length} · ✓ ${ok}`;
 }
 
@@ -354,7 +357,8 @@ function setActions(){
     h += `<button class="btn primary" data-a="next">Sonraki</button>`;
   }
   a.innerHTML = h;
-  a.querySelectorAll('button').forEach(b=>b.onclick=()=>act(b.dataset.a));
+  const shown = Date.now();
+  a.querySelectorAll('button').forEach(b=>b.onclick=()=>{ if(Date.now()-shown<350) return; act(b.dataset.a); });
   // "count as correct" link for fill-in answers marked wrong
   const old = document.getElementById('acceptLink'); if(old) old.remove();
   if(state.answered && !state.correct && state.typed){
@@ -389,6 +393,7 @@ function finish(){
   $('sOk').textContent = ok; $('sBad').textContent = tot-ok; $('sTot').textContent = tot;
   $('retryWrong').classList.toggle('hidden', wrongList.length===0);
   $('bar').style.width='100%';
+  $('resumeBtn').classList.add('hidden'); $('startBtn').textContent='Başla'; $('startBtn').classList.add('primary');
   show('end');
 }
 
@@ -409,7 +414,8 @@ document.addEventListener('keydown',e=>{
 });
 
 $('startBtn').onclick=()=>begin(DATA.filter(SETS.find(s=>s.id===selected).f));
-$('menuBtn').onclick=()=>show('start');
+$('menuBtn').onclick=()=>{ show('start'); $('resumeBtn').classList.remove('hidden'); $('startBtn').textContent='Yeniden Başla'; $('startBtn').classList.remove('primary'); };
+$('resumeBtn').onclick=()=>{ show('quiz'); };
 $('restart').onclick=()=>show('start');
 $('retryWrong').onclick=()=>begin(wrongList.slice());
 renderSets();
