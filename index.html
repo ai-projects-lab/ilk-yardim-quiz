@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>İlk Yardım Çalışma</title>
+<meta name="description" content="İlk yardım: 98 soru ile çalışma uygulaması (çoktan seçmeli, doğru/yanlış, boşluk doldurma).">
+<style>
+:root{
+  --bg:#f6f7f9;--card:#fff;--text:#1c2430;--muted:#5d6878;--line:#dfe3e9;
+  --accent:#c62828;--accent-text:#fff;--accent-soft:#fdecec;
+  --ok:#1f8a4c;--ok-soft:#e3f5ea;--bad:#c62828;--bad-soft:#fdecec;
+  --btn:#eef1f5;--btn-hover:#e3e8ef;--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#12161c;--card:#1b2129;--text:#e7ebf0;--muted:#9aa5b4;--line:#2e3742;
+    --accent:#ef5350;--accent-text:#fff;--accent-soft:#3a2224;
+    --ok:#4cc27e;--ok-soft:#173226;--bad:#ef6461;--bad-soft:#3a2224;
+    --btn:#252d37;--btn-hover:#2e3844;--shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12161c;--card:#1b2129;--text:#e7ebf0;--muted:#9aa5b4;--line:#2e3742;
+  --accent:#ef5350;--accent-text:#fff;--accent-soft:#3a2224;
+  --ok:#4cc27e;--ok-soft:#173226;--bad:#ef6461;--bad-soft:#3a2224;
+  --btn:#252d37;--btn-hover:#2e3844;--shadow:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.logo{width:36px;height:36px;border-radius:10px;background:var(--accent);display:grid;place-items:center;flex:none}
+.logo svg{width:20px;height:20px}
+h1{font-size:1.15rem;margin:0;line-height:1.2}
+.sub{color:var(--muted);font-size:.85rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
+.hidden{display:none!important}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px}
+.btn{background:var(--btn);color:var(--text);padding:12px 18px;font-weight:600}
+.btn:hover{background:var(--btn-hover)}
+.btn.primary{background:var(--accent);color:var(--accent-text)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn:focus-visible,.opt:focus-visible,input:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.actions .btn{flex:1 1 160px}
+/* start */
+.sets{display:grid;gap:10px;margin:14px 0}
+.set{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);text-align:left;width:100%}
+.set:hover{border-color:var(--muted)}
+.set.sel{border-color:var(--accent);background:var(--accent-soft)}
+.set b{display:block}
+.set span{color:var(--muted);font-size:.85rem}
+.count{font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted)}
+.check{display:flex;align-items:center;gap:10px;margin:6px 0 4px;color:var(--text)}
+.check input{width:18px;height:18px;accent-color:var(--accent)}
+.note{color:var(--muted);font-size:.8rem;margin-top:16px}
+/* quiz */
+.topbar{display:flex;align-items:center;gap:12px;margin-bottom:12px;font-size:.9rem;color:var(--muted)}
+.topbar .btn{padding:8px 12px;font-size:.85rem}
+.progress{flex:1;height:6px;background:var(--line);border-radius:4px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.score{font-variant-numeric:tabular-nums;white-space:nowrap}
+.tag{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:3px 8px;border-radius:6px}
+.qnum{color:var(--muted);font-size:.8rem;margin-left:8px}
+.q{font-size:1.15rem;font-weight:600;margin:12px 0 16px;line-height:1.45}
+.blank{display:inline-block;min-width:4em;border-bottom:2px solid var(--muted);margin:0 2px}
+.opts{display:grid;gap:10px}
+.opts.tf{grid-template-columns:1fr 1fr}
+.opt{display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;background:var(--card);color:var(--text);border:2px solid var(--line);padding:12px 14px;border-radius:12px;font-weight:500}
+.opt:hover:not(:disabled){border-color:var(--muted)}
+.opt:disabled{cursor:default}
+.opt .k{flex:none;width:26px;height:26px;border-radius:7px;background:var(--btn);display:grid;place-items:center;font-weight:700;font-size:.85rem}
+.opts.tf .opt{justify-content:center;font-size:1.05rem;font-weight:700;padding:16px}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.ok .k{background:var(--ok);color:#fff}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.opt.bad .k{background:var(--bad);color:#fff}
+.opt.dim{opacity:.55}
+.fill{display:grid;gap:10px}
+.fill label{font-size:.85rem;color:var(--muted)}
+.fill input{width:100%;font:inherit;padding:12px 14px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--text)}
+.fill input.ok{border-color:var(--ok);background:var(--ok-soft)}
+.fill input.bad{border-color:var(--bad);background:var(--bad-soft)}
+.feedback{margin-top:16px;padding:12px 14px;border-radius:12px;font-weight:600}
+.feedback.ok{background:var(--ok-soft);color:var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--bad)}
+.reveal{margin-top:14px;padding:14px;border-radius:12px;border:1px dashed var(--line)}
+.reveal .ans{font-weight:700}
+.reveal .ex{color:var(--muted);margin-top:6px}
+.link{background:none;color:var(--muted);text-decoration:underline;padding:4px 0;font-size:.85rem}
+/* end */
+.big{font-size:2.6rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}
+.stat{background:var(--btn);border-radius:12px;padding:12px;text-align:center}
+.stat b{display:block;font-size:1.4rem;font-variant-numeric:tabular-nums}
+.stat span{font-size:.8rem;color:var(--muted)}
+.kbd{color:var(--muted);font-size:.75rem;margin-top:14px;text-align:center}
+@media (max-width:480px){.q{font-size:1.05rem}.card{padding:16px}.kbd{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="#fff"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/></svg></div>
+    <div><h1>İlk Yardım Soru Çalışması</h1><div class="sub">98 soru · açıklamalı cevaplar</div></div>
+  </header>
+
+  <!-- START -->
+  <section id="start" class="card">
+    <div style="font-weight:700">Hangi soruları çalışmak istersin?</div>
+    <div class="sets" id="sets"></div>
+    <label class="check"><input type="checkbox" id="shuffle" checked> Soruları karışık sırayla sor</label>
+    <div class="actions"><button class="btn primary" id="startBtn">Başla</button></div>
+    <div class="note">Bu bir sınav hazırlık materyalidir. Gerçek acil durumlarda 112'nin yönlendirmeleri ve güncel ilk yardım eğitimi esas alınmalıdır.</div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" class="hidden">
+    <div class="topbar">
+      <button class="btn" id="menuBtn">Menü</button>
+      <div class="progress"><i id="bar"></i></div>
+      <div class="score" id="pos"></div>
+    </div>
+    <div class="card">
+      <div><span class="tag" id="tag"></span><span class="qnum" id="qnum"></span></div>
+      <div class="q" id="qtext"></div>
+      <div id="answers"></div>
+      <div id="feedback" class="feedback hidden"></div>
+      <div id="reveal" class="reveal hidden"></div>
+      <div class="actions" id="actions"></div>
+    </div>
+    <div class="kbd">Klavye: A–E / 1–5 seçenek, D/Y doğru–yanlış, Enter kontrol/sonraki</div>
+  </section>
+
+  <!-- END -->
+  <section id="end" class="card hidden">
+    <div class="sub">Sonuç</div>
+    <div class="big" id="pct"></div>
+    <div class="stats">
+      <div class="stat"><b id="sOk"></b><span>Doğru</span></div>
+      <div class="stat"><b id="sBad"></b><span>Yanlış</span></div>
+      <div class="stat"><b id="sTot"></b><span>Toplam</span></div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="retryWrong">Yanlışları Tekrar Çalış</button>
+      <button class="btn" id="restart">Baştan Başla</button>
+    </div>
+  </section>
+</div>
+
+<script>
+const DATA = [{"type": "mc", "n": 1, "q": "İlk yardımın temel amaçları arasında aşağıdakilerden hangisi bulunmaz?", "expl": "İlk yardımcının görevi kesin tıbbi tanı koymak veya tedavi yapmak değildir.", "options": [["A", "Hayatı korumak"], ["B", "Kötüleşmeyi önlemek"], ["C", "İyileşmeyi desteklemek"], ["D", "Kesin tıbbi tanı koymak"], ["E", "Profesyonel yardıma kadar destek olmak"]], "answer": "D"}, {"type": "mc", "n": 2, "q": "Bilinci açık ve karar verme yeterliliği bulunan bir yetişkin ilk yardımı reddederse ne yapılmalıdır?", "expl": "Bilinçli kişinin müdahaleyi reddetme hakkı vardır. Acil tehlike varsa profesyonel yardım istenir.", "options": [["A", "Rızası olmadan müdahale edilir"], ["B", "İradesine saygı duyulur ve gerektiğinde 112 aranır"], ["C", "Kişi mutlaka taşınır"], ["D", "Kişiye ilaç verilir"], ["E", "Rıza yalnızca yazılıysa geçerlidir"]], "answer": "B"}, {"type": "mc", "n": 3, "q": "Acil durum yerinde ilk yardımcının öncelikle değerlendirmesi gereken unsur hangisidir?", "expl": "Olay yeri güvenli değilse ilk yardımcı da yaralanabilir; bu yüzden güvenlik ilk sıradadır.", "options": [["A", "Yaralının yaşı"], ["B", "Olay yerinin güvenliği"], ["C", "Yaralının kullandığı ilaçlar"], ["D", "Ağrının süresi"], ["E", "Yaralının mesleği"]], "answer": "B"}, {"type": "mc", "n": 4, "q": "Hasta/yaralının değerlendirilmesinde doğru sıralama hangisidir?", "expl": "Slaytta değerlendirme birincil kontrol, baştan sona inceleme ve öykü alma şeklinde üç basamaklıdır.", "options": [["A", "Öykü – tam vücut – birincil kontrol"], ["B", "Tam vücut – öykü – birincil kontrol"], ["C", "Birincil kontrol – tam vücut – öykü"], ["D", "Öykü – birincil kontrol – tam vücut"], ["E", "Tam vücut – birincil kontrol – öykü"]], "answer": "C"}, {"type": "mc", "n": 5, "q": "Aşağıdakilerden hangisi bilinçsiz ve normal solunumu olmayan kişiye yönelik doğru yaklaşımdır?", "expl": "Normal solunum yoksa kişi kalp durması yönünden değerlendirilir ve gecikmeden TYD gerekir.", "options": [["A", "Derlenme pozisyonu verip beklemek"], ["B", "Su içirmek"], ["C", "Yüzüne su dökmek"], ["D", "112 ve Temel Yaşam Desteği"], ["E", "Ayakta tutmaya çalışmak"]], "answer": "D"}, {"type": "mc", "n": 6, "q": "Aşağıdaki damarlardan hangisi kanı kalpten uzaklaştırır?", "expl": "Arterler kanı kalpten uzaklaştırır; bu tanım taşınan kanın oksijen içeriğinden bağımsızdır.", "options": [["A", "Ven"], ["B", "Arter"], ["C", "Kapiller"], ["D", "Lenf damarı"], ["E", "Venül"]], "answer": "B"}, {"type": "mc", "n": 7, "q": "Kan ile doku arasında madde alışverişinin esas gerçekleştiği damar hangisidir?", "expl": "İnce duvarlı kapillerler gaz, besin ve atık alışverişine olanak sağlar.", "options": [["A", "Aort"], ["B", "Vena kava"], ["C", "Kapiller"], ["D", "Pulmoner arter"], ["E", "Büyük ven"]], "answer": "C"}, {"type": "mc", "n": 8, "q": "Slayta göre vücut ağırlığının yaklaşık yüzde kaçı kan miktarına karşılık gelir?", "expl": "Vücut sistemleri sunumunda yaklaşık %8 değeri verilmiştir.", "options": [["A", "%2"], ["B", "%4"], ["C", "%8"], ["D", "%15"], ["E", "%25"]], "answer": "C"}, {"type": "mc", "n": 9, "q": "Solunum ve dolaşım yetersizliğinden en hızlı etkilenen sistem hangisidir?", "expl": "Beyin oksijene çok bağımlıdır. Oksijen yetersizliği kısa sürede ciddi hasara yol açabilir.", "options": [["A", "Sindirim"], ["B", "Kas-iskelet"], ["C", "Üriner"], ["D", "Sinir"], ["E", "Deri"]], "answer": "D"}, {"type": "mc", "n": 10, "q": "Duyu sinir uçları, ter bezleri ve kıl kökleri ağırlıklı olarak hangi deri tabakasındadır?", "expl": "Dermis damar, sinir, bez ve kıl kökü yapılarını içerir.", "options": [["A", "Epidermis"], ["B", "Dermis"], ["C", "Tırnak plağı"], ["D", "Stratum korneum"], ["E", "Dış ölü hücre tabakası"]], "answer": "B"}, {"type": "mc", "n": 11, "q": "Hastayı yerden kaldırırken hangi yaklaşım önerilir?", "expl": "Diz ve kalçalardan bükülmek, bacak kaslarını kullanmak sırt üzerindeki zorlanmayı azaltır.", "options": [["A", "Belden öne eğilmek"], ["B", "Yükü vücuttan uzaklaştırmak"], ["C", "Diz ve kalçaları bükerek bacak kaslarını kullanmak"], ["D", "Ani dönerek kaldırmak"], ["E", "Ayakları birleştirmek"]], "answer": "C"}, {"type": "mc", "n": 12, "q": "Rentek manevrasının en uygun kullanılma nedeni hangisidir?", "expl": "Rentek, acil araç tahliyesi gereken durumlarda baş-boyun-gövde eksenini korumayı amaçlar.", "options": [["A", "Her trafik kazasında rutin uygulanması"], ["B", "Yaralıyı daha rahat muayene etmek"], ["C", "Yangın gibi hayati tehlike nedeniyle araçtan acilen çıkarmak"], ["D", "Yaralı yürüyebildiği hâlde taşıma kolaylığı"], ["E", "Yaralıyı yalnızca başka koltuğa almak"]], "answer": "C"}, {"type": "mc", "n": 13, "q": "Kaşık tekniği için slaytta belirtilen ilk yardımcı sayısı kaçtır?", "expl": "Kaşık tekniği üç kişi tarafından, hastaya yalnızca bir taraftan erişilebildiğinde uygulanır.", "options": [["A", "1"], ["B", "2"], ["C", "3"], ["D", "4"], ["E", "5"]], "answer": "C"}, {"type": "mc", "n": 14, "q": "Köprü tekniğinde dört ilk yardımcıdan dördüncüsünün görevi nedir?", "expl": "Üç kişi hastayı desteklerken dördüncü kişi sedyeyi altına yerleştirir.", "options": [["A", "Hastaya yiyecek vermek"], ["B", "Sedyeyi kaldırılan hastanın altına yerleştirmek"], ["C", "Hastanın nabzını ölçmek"], ["D", "Turnike uygulamak"], ["E", "Hastanın öyküsünü almak"]], "answer": "B"}, {"type": "mc", "n": 15, "q": "Hangi yöntem özellikle yürüyebilen ancak desteğe ihtiyaç duyan hafif yaralı için uygundur?", "expl": "Yan koltuk desteğinde hasta yürüyebilir ve ilk yardımcıdan destek alır.", "options": [["A", "Omuzdan destek (yan koltuk)"], ["B", "Rentek"], ["C", "Köprü"], ["D", "İtfaiyeci"], ["E", "Kaşık"]], "answer": "A"}, {"type": "mc", "n": 16, "q": "USAY değerlendirmesinde 'S' harfi neyi ifade eder?", "expl": "USAY: Uyanık, Sese yanıt, Ağrıya yanıt, Yanıtsız.", "options": [["A", "Solunum"], ["B", "Sese yanıt"], ["C", "Şok"], ["D", "Süre"], ["E", "Sıcaklık"]], "answer": "B"}, {"type": "mc", "n": 17, "q": "Aşağıdakilerden hangisi koma için en uygun açıklamadır?", "expl": "Koma, uyandırılamama ve çevresel uyaranlara yanıtın ciddi biçimde azalması veya kaybıyla karakterizedir.", "options": [["A", "Geçici baş dönmesi"], ["B", "İstemli hareketlerin artması"], ["C", "Uyarılarla uyandırılamayan ağır bilinç kaybı"], ["D", "Yalnızca konuşma kaybı"], ["E", "Ağrı olmaması"]], "answer": "C"}, {"type": "mc", "n": 18, "q": "Presenkop ile ilgili hangi ifade doğrudur?", "expl": "Presenkop yaklaşan bayılma hissidir. Göğüs ağrısı veya travma varsa karşı basınç manevraları uygun olmayabilir.", "options": [["A", "Mutlaka tam bilinç kaybı vardır"], ["B", "Bayılma öncesinde gelişen, bilinç kaybı olmadan da görülen durumdur"], ["C", "Epilepsi ile eş anlamlıdır"], ["D", "Yalnızca çocuklarda görülür"], ["E", "Her durumda fiziksel manevralar uygulanır"]], "answer": "B"}, {"type": "mc", "n": 19, "q": "FAST testinde 'A' hangi değerlendirmedir?", "expl": "Arms, kişinin her iki kolunu kaldırabilme yeteneğinin değerlendirilmesidir.", "options": [["A", "Allergy"], ["B", "Airway"], ["C", "Arms"], ["D", "Alert"], ["E", "Anxiety"]], "answer": "C"}, {"type": "mc", "n": 20, "q": "İnme şüphesinde FAST testinin bir basamağı anormalse ne yapılmalıdır?", "expl": "İnmede erken müdahale çok önemlidir. Tek bir FAST bulgusu bile acil yardım gerektirir.", "options": [["A", "Bir saat beklenir"], ["B", "Yiyecek verilir"], ["C", "Masaj yapılır"], ["D", "Hemen 112 aranır"], ["E", "Kişi yürütülür"]], "answer": "D"}, {"type": "mc", "n": 21, "q": "Epilepsi nöbeti sırasında aşağıdakilerden hangisi yapılmalıdır?", "expl": "Nöbet sırasında kişi yaralanmadan korunur; hareketleri zorla durdurulmaz ve ağzına cisim sokulmaz.", "options": [["A", "Çene zorla açılır"], ["B", "Ağız içine kaşık yerleştirilir"], ["C", "Kol ve bacaklar sıkıca tutulur"], ["D", "Başın çarpması önlenir ve çevre güvenli hâle getirilir"], ["E", "Üzerine soğuk su dökülür"]], "answer": "D"}, {"type": "mc", "n": 22, "q": "Aşağıdakilerden hangisi epilepsi nöbetinde 112 aranmasını gerektiren durumlardan biridir?", "expl": "Beş dakikayı aşan nöbetler uzamış nöbet kabul edilir ve acil tıbbi yardım gerekir.", "options": [["A", "Nöbetin 20 saniye sürmesi ve tamamen düzelme"], ["B", "Daha önce tanılı kısa nöbetin rutin şekilde sonlanması"], ["C", "Nöbetin 5 dakikadan uzun sürmesi"], ["D", "Nöbet sonrasında hafif yorgunluk"], ["E", "Nöbet sırasında gözlerin kapanması"]], "answer": "C"}, {"type": "mc", "n": 23, "q": "Bilinci açık, güvenle yutabilen ve hipoglisemisi düşünülen kişi için uygun yaklaşım hangisidir?", "expl": "Güvenle yutabilen kişide hızlı etkili karbonhidrat kan şekeri düşüklüğünün düzeltilmesinde kullanılır.", "options": [["A", "İnsülin yapmak"], ["B", "Şekerli yiyecek veya içecek vermek"], ["C", "Yiyecek ve içecek vermemek"], ["D", "Soğuk duş aldırmak"], ["E", "Ağız içine zorla yiyecek yerleştirmek"]], "answer": "B"}, {"type": "mc", "n": 24, "q": "Nefeste çürük elma veya aseton kokusu en çok hangi durumla ilişkilidir?", "expl": "Keton birikimi, özellikle diyabetik ketoasidozda nefeste aseton benzeri koku oluşturabilir.", "options": [["A", "Senkop"], ["B", "Hiperglisemik ketoasidoz"], ["C", "Basit burun kanaması"], ["D", "Kas spazmı"], ["E", "Kapiller kanama"]], "answer": "B"}, {"type": "mc", "n": 25, "q": "Şiddetli alerjik reaksiyonda aşağıdakilerden hangisi alarm bulgusudur?", "expl": "Hava yolunu etkileyen şişlik anafilaksi belirtisi olabilir ve hayatı tehdit eder.", "options": [["A", "Yalnızca hafif kaşıntı"], ["B", "Dil ve boğazda şişme ile solunum güçlüğü"], ["C", "Geçici hapşırma"], ["D", "Hafif burun akıntısı"], ["E", "Sadece lokal kızarıklık"]], "answer": "B"}, {"type": "mc", "n": 26, "q": "Aşağıdakilerden hangisi ağırlaşan astım atağını düşündürür?", "expl": "Konuşma güçlüğü ve morarma ciddi solunum yetersizliğinin göstergeleridir.", "options": [["A", "Rahat cümle kurabilme"], ["B", "Nefes darlığının hızla azalması"], ["C", "Cümle kuramama ve dudaklarda morarma"], ["D", "Normal solunum"], ["E", "Öksürüğün tamamen durmasıyla rahatlama"]], "answer": "C"}, {"type": "mc", "n": 27, "q": "Atardamar kanamasının tipik özelliği hangisidir?", "expl": "Arter içi basınç yüksek olduğundan yaralanmada nabızla uyumlu kanama gelişebilir.", "options": [["A", "Yalnızca sızıntı"], ["B", "Kalp atımıyla uyumlu fışkırma"], ["C", "Her zaman ağrısız olma"], ["D", "Daima koyu renkli yavaş akış"], ["E", "Kanama oluşturmama"]], "answer": "B"}, {"type": "mc", "n": 28, "q": "Kanayan yara üzerine konulan ilk gazlı bez kana bulandıysa ne yapılmalıdır?", "expl": "İlk bezin kaldırılması pıhtıyı bozabilir. Sürekli bası korunmalıdır.", "options": [["A", "Hemen kaldırılır"], ["B", "Yara yıkanır"], ["C", "Üzerine ilave bez konup basıya devam edilir"], ["D", "Kanama kendiliğinden durana kadar bırakılır"], ["E", "Turnike her durumda uygulanır"]], "answer": "C"}, {"type": "mc", "n": 29, "q": "Turnike uygulamasıyla ilgili hangisi doğrudur?", "expl": "Turnikenin uygulama zamanı kaydedilir ve sağlık ekibine bildirilir. Eğitimli ekip talimatı olmadan gevşetilmez.", "options": [["A", "Eklem üzerine uygulanır"], ["B", "İp veya tel her zaman uygundur"], ["C", "Kanama kontrol edilince rutin olarak gevşetilir"], ["D", "Uygulama saati kaydedilir"], ["E", "Uygulama yeri mutlaka gizlenir"]], "answer": "D"}, {"type": "mc", "n": 30, "q": "İç kanamayı düşündüren bulgulardan hangisi en anlamlıdır?", "expl": "Dolaşan kan hacminin azalması, soluk ve soğuk deri ile taşikardiye neden olabilir.", "options": [["A", "Soğuk, soluk deri ve hızlanan nabız"], ["B", "Sadece saç dökülmesi"], ["C", "Tırnak uzaması"], ["D", "Hafif burun kaşıntısı"], ["E", "Yalnızca iştah artışı"]], "answer": "A"}, {"type": "mc", "n": 31, "q": "Kopan uzuv parçasının korunmasında doğru yaklaşım hangisidir?", "expl": "Soğuk ortam korunmayı destekler, ancak doğrudan buz teması dokuda donma hasarı oluşturabilir.", "options": [["A", "Doğrudan buz içine gömmek"], ["B", "Sıcak suya koymak"], ["C", "Açıkta ve kuru havada bırakmak"], ["D", "Temiz beze sarıp kapalı torbada, buzla doğrudan temas etmeden soğukta tutmak"], ["E", "Parçayı dezenfektana batırmak"]], "answer": "D"}, {"type": "mc", "n": 32, "q": "Vücuda saplanmış büyük bir yabancı cisim için doğru ilk yardım hangisidir?", "expl": "Saplı cismin çıkarılması kanamayı artırabilir ve ek doku hasarı oluşturabilir.", "options": [["A", "Cismi hemen çıkarmak"], ["B", "Cismi sabitlemek ve çevresindeki kanamayı kontrol etmek"], ["C", "Cismi hareket ettirerek incelemek"], ["D", "Cismin üzerine doğrudan ağır baskı uygulamak"], ["E", "Yaranın içine sıvı doldurmak"]], "answer": "B"}, {"type": "mc", "n": 33, "q": "Burun kanamasında başın hafif öne eğilmesinin temel nedeni nedir?", "expl": "Başın geriye atılması kanın boğaza akmasına ve yutulmasına neden olabilir.", "options": [["A", "Kan basıncını artırmak"], ["B", "Kanı boğaza yönlendirmek"], ["C", "Kanın yutulmasını azaltmak"], ["D", "Solunumu durdurmak"], ["E", "Damarları genişletmek"]], "answer": "C"}, {"type": "mc", "n": 34, "q": "Kusma ve ciddi ishal nedeniyle gelişen şok hangi ana mekanizmayla ilişkilidir?", "expl": "Kusma ve ishalle vücut sıvı hacmi azalır; bu hipovolemik şoka neden olabilir.", "options": [["A", "Kardiyojenik"], ["B", "Obstrüktif"], ["C", "Hipovolemik"], ["D", "Nörojenik"], ["E", "Yalnızca hemorajik"]], "answer": "C"}, {"type": "mc", "n": 35, "q": "Akciğer damarının pıhtıyla tıkanmasına bağlı dolaşım bozukluğu hangi şok grubuna örnektir?", "expl": "Pulmoner emboli dolaşımda mekanik engel oluşturabilir ve obstrüktif şoka neden olabilir.", "options": [["A", "Obstrüktif"], ["B", "Septik"], ["C", "Nörojenik"], ["D", "Hemorajik"], ["E", "Sadece anafilaktik"]], "answer": "A"}, {"type": "mc", "n": 36, "q": "Şokta kan basıncının normal bulunması neyi gösterir?", "expl": "Vücudun telafi mekanizmaları erken dönemde kan basıncını koruyabilir.", "options": [["A", "Şok kesinlikle yoktur"], ["B", "Kan kaybı kesinlikle yoktur"], ["C", "Erken şok olasılığını dışlamaz"], ["D", "112 aranmamalıdır"], ["E", "Kişi mutlaka yürütülmelidir"]], "answer": "C"}, {"type": "mc", "n": 37, "q": "Kalp krizi şüphesinde ağrının hangi bölgelere yayılması mümkündür?", "expl": "Kalp kaynaklı ağrı göğüs dışında omuz, kol, boyun, çene, sırt ve mide bölgesinde hissedilebilir.", "options": [["A", "Yalnızca sağ ayağa"], ["B", "Omuz, boyun, çene, sırt veya kollara"], ["C", "Yalnızca dizlere"], ["D", "Sadece kulağa"], ["E", "Yalnızca el parmaklarına"]], "answer": "B"}, {"type": "mc", "n": 38, "q": "Ani başlayan ezici göğüs ağrısı, soğuk terleme ve nefes darlığı bulunan kişiye ilk yaklaşım hangisidir?", "expl": "Kalp krizi olasılığı nedeniyle acil yardım istenir; kişiye gereksiz fiziksel efor yaptırılmaz.", "options": [["A", "Yürüyüş yaptırmak"], ["B", "İki saat beklemek"], ["C", "112 arayıp kişiyi dinlendirmek ve izlemek"], ["D", "Yiyecek vermek"], ["E", "Soğuk duş aldırmak"]], "answer": "C"}, {"type": "tf", "n": 1, "q": "Bilinci kapalı ancak normal solunumu olan kişi, yaralanma koşulları uygunsa derlenme pozisyonuna alınabilir.", "expl": "Derlenme pozisyonu hava yolunu korumak ve salgıların dışarı akışına yardımcı olmak için kullanılır.", "answer": true}, {"type": "tf", "n": 2, "q": "İlk yardımcı kendi can güvenliğini tehlikeye atmak pahasına müdahale etmelidir.", "expl": "Öncelik olay yerinin ve ilk yardımcının güvenliğidir.", "answer": false}, {"type": "tf", "n": 3, "q": "Bilinçli ve karar verme yeterliliği bulunan yetişkin, önerilen ilk yardımı reddedebilir.", "expl": "Rıza ilk yardımın etik ve hukuki boyutunun bir parçasıdır.", "answer": true}, {"type": "tf", "n": 4, "q": "Atardamarlar her zaman oksijeni fazla kan taşır.", "expl": "Akciğer atardamarı bunun istisnasıdır. Atardamarların temel özelliği kanı kalpten uzaklaştırmalarıdır.", "answer": false}, {"type": "tf", "n": 5, "q": "Beyin oksijen eksikliğinden hızla etkilenebilir.", "expl": "Sinir dokusu yüksek oksijen gereksinimine sahiptir.", "answer": true}, {"type": "tf", "n": 6, "q": "Köprü tekniği slaytta üç ilk yardımcıyla yapılan bir yöntem olarak tanımlanmıştır.", "expl": "Köprü tekniğinde dört, kaşık tekniğinde üç ilk yardımcı bulunur.", "answer": false}, {"type": "tf", "n": 7, "q": "Hasta/yaralıya iki taraftan ulaşılabiliyorsa köprü tekniği uygun bir sedyeye aktarma yöntemi olarak anlatılmıştır.", "expl": "Bu yöntem için dört ilk yardımcı kullanılır.", "answer": true}, {"type": "tf", "n": 8, "q": "USAY sınıflamasında 'A', ağrılı uyarana verilen yanıtı ifade eder.", "expl": "Uyanık, Sese yanıt, Ağrıya yanıt, Yanıtsız.", "answer": true}, {"type": "tf", "n": 9, "q": "Her bilinç bozukluğu doğrudan koma anlamına gelir.", "expl": "Bilinç bozukluğu hafif sersemlikten komaya kadar uzanabilir.", "answer": false}, {"type": "tf", "n": 10, "q": "İnme yalnızca yaşlılarda görülür.", "expl": "Gençlerde de görülebilir.", "answer": false}, {"type": "tf", "n": 11, "q": "Epilepsi nöbetinde kişinin dilini yutmasını önlemek için ağzına kaşık yerleştirilmelidir.", "expl": "Ağza cisim sokulması diş, ağız ve hava yolu yaralanmalarına neden olabilir.", "answer": false}, {"type": "tf", "n": 12, "q": "Hipoglisemi, aşırı insülin kullanımı sonucunda gelişebilir.", "expl": "İnsülin kan şekerini düşürür; aşırı doz hipoglisemiye yol açabilir.", "answer": true}, {"type": "tf", "n": 13, "q": "Bilinci kapalı hipoglisemi hastasına ağızdan şekerli su içirilmelidir.", "expl": "Yutma güvenliği yoktur; boğulma riski nedeniyle ağızdan hiçbir şey verilmez.", "answer": false}, {"type": "tf", "n": 14, "q": "Anafilaksinin belirtileri yalnızca cilt kızarıklığından ibarettir.", "expl": "Solunum, dolaşım ve sindirim sistemi de etkilenebilir.", "answer": false}, {"type": "tf", "n": 15, "q": "Astım atağı sırasında kişiyi zorla sırt üstü yatırmak doğru yaklaşımdır.", "expl": "Genellikle rahat soluyabildiği oturur pozisyon tercih edilir.", "answer": false}, {"type": "tf", "n": 16, "q": "Kanamanın şiddeti yalnızca kanın rengine bakılarak belirlenebilir.", "expl": "Kanama miktarı, hızı, bölgesi ve hastanın klinik durumu birlikte değerlendirilir.", "answer": false}, {"type": "tf", "n": 17, "q": "İlk bez kana bulandığında kaldırılması pıhtı oluşumunu bozabilir.", "expl": "Bu nedenle ilk bez yerinde tutularak üzerine ek malzeme yerleştirilir.", "answer": true}, {"type": "tf", "n": 18, "q": "Uygulanan turnike, ilk yardımcı tarafından belirli aralıklarla gevşetilmelidir.", "expl": "Slaytta da belirtildiği gibi sağlık ekibi gelene kadar turnike açılmaz veya gevşetilmez.", "answer": false}, {"type": "tf", "n": 19, "q": "Vücuda saplanmış yabancı cismi çıkarmak kanamayı artırabilir.", "expl": "Cisim hasarlı damara geçici olarak basınç uyguluyor olabilir.", "answer": true}, {"type": "tf", "n": 20, "q": "Burun kanamasında baş geriye yatırılmalıdır.", "expl": "Baş hafifçe öne eğilir; böylece kanın boğaza akması azaltılır.", "answer": false}, {"type": "tf", "n": 21, "q": "Kopan uzuv parçası doğrudan buzla temas ettirilmemelidir.", "expl": "Doğrudan buz teması donmaya bağlı doku hasarı oluşturabilir.", "answer": true}, {"type": "tf", "n": 22, "q": "Hemorajik şok, kan kaybına bağlı gelişir.", "expl": "Hemoraji kanama demektir; ağır kan kaybı dolaşan kan hacmini azaltır.", "answer": true}, {"type": "tf", "n": 23, "q": "Septik şok enfeksiyonlarla ilişkili gelişebilir.", "expl": "Ağır enfeksiyon, dolaşım ve damar yanıtlarını bozarak septik şoka yol açabilir.", "answer": true}, {"type": "tf", "n": 24, "q": "Şokun erken dönemlerinde kan basıncı normal olabilir.", "expl": "Telafi mekanizmaları başlangıçta kan basıncını koruyabilir.", "answer": true}, {"type": "tf", "n": 25, "q": "Göğüs ağrısının tek nedeni kalp krizidir.", "expl": "Kas, mide, akciğer ve büyük damar hastalıkları da göğüs ağrısı oluşturabilir.", "answer": false}, {"type": "tf", "n": 26, "q": "Kalp krizinde ağrı çeneye, sırta ve kollara yayılabilir.", "expl": "Bunlar kalp kaynaklı göğüs ağrısının bilinen yayılım bölgeleridir.", "answer": true}, {"type": "tf", "n": 27, "q": "İç kanama yaşayan kişinin dışarıdan kanaması görülmeyebilir.", "expl": "Kan vücut içinde birikebilir ve görünür kanama olmadan şok gelişebilir.", "answer": true}, {"type": "tf", "n": 28, "q": "Kalp tamponadı, obstrüktif şok nedenlerinden biridir.", "expl": "Kalp çevresindeki sıvı veya kan, kalbin dolmasını ve etkili pompalamasını engelleyebilir.", "answer": true}, {"type": "tf", "n": 29, "q": "Senkop, beyne giden kan akımının geçici olarak azalmasıyla ilişkili olabilir.", "expl": "Bu durum kısa süreli bilinç kaybına yol açabilir.", "answer": true}, {"type": "tf", "n": 30, "q": "Ciddi nefes darlığı ve göğüs ağrısı olan bir kişinin yakınmaları yalnızca strese bağlanmalıdır.", "expl": "Kalp ve akciğer kaynaklı yaşamı tehdit eden durumlar dışlanmadan psikolojik neden varsayılmamalıdır.", "answer": false}, {"type": "fill", "n": 1, "q": "Ani hastalık veya yaralanmada, olay yerindeki mevcut imkânlarla uygulanan hızlı müdahalelere __________ denir.", "expl": "İlk yardımın amacı yaşamı korumak, kötüleşmeyi önlemek ve iyileşmeye destek olmaktır.", "answer": "İlk yardım"}, {"type": "fill", "n": 2, "q": "Türkiye'de acil çağrı numarası __________'dir.", "expl": "Acil sağlık yardımına bu numaradan ulaşılır.", "answer": "112"}, {"type": "fill", "n": 3, "q": "Bilinci kapalı ancak normal solunumu olan kişi, uygun koşullarda __________ pozisyonuna alınır.", "expl": "Sabit yan yatış olarak da adlandırılır.", "answer": "Derlenme"}, {"type": "fill", "n": 4, "q": "Kanı kalpten uzaklaştıran damarlara __________ denir.", "expl": "Damarın yönü, oksijen içeriğinden daha temel bir ayırt edici özelliktir.", "answer": "Arter / atardamar"}, {"type": "fill", "n": 5, "q": "Kan ile dokular arasında madde alışverişini sağlayan ince damarlara __________ denir.", "expl": "Bu damarlar çok ince duvarlıdır.", "answer": "Kapiller / kılcal damar"}, {"type": "fill", "n": 6, "q": "İçinde kan damarları, sinir uçları ve ter bezleri bulunan deri tabakası __________ tabakasıdır.", "expl": "Epidermis ise dış koruyucu tabakadır.", "answer": "Dermis"}, {"type": "fill", "n": 7, "q": "Araç içindeki yaralının acil tahliyesinde kullanılan özel teknik __________ manevrasıdır.", "expl": "Özellikle baş-boyun-omurga eksenini koruyarak zorunlu araç tahliyesi için kullanılır.", "answer": "Rentek"}, {"type": "fill", "n": 8, "q": "Hastaya tek taraftan erişim olduğunda üç kişinin uyguladığı sedyeye aktarma tekniği __________ tekniğidir.", "expl": "Dört kişiyle yapılan köprü tekniğinden farklıdır.", "answer": "Kaşık"}, {"type": "fill", "n": 9, "q": "USAY değerlendirmesinde 'Y' harfi __________ anlamındadır.", "expl": "Kişinin uygulanan uyaranlara yanıt vermemesi durumudur.", "answer": "Yanıtsız"}, {"type": "fill", "n": 10, "q": "Beyne giden kan akımının geçici olarak azalmasına bağlı kısa süreli bilinç kaybı __________ olarak adlandırılır.", "expl": "Presenkop ise tam bilinç kaybı gerçekleşmeden hissedilen bayılayazma durumudur.", "answer": "Senkop / bayılma"}, {"type": "fill", "n": 11, "q": "FAST testinde F yüzü, A kolları, S konuşmayı, T ise __________ ifade eder.", "expl": "İnmede müdahaleye kadar geçen süre kritik önemdedir.", "answer": "Time / zaman"}, {"type": "fill", "n": 12, "q": "Epileptik nöbet __________ dakikadan uzun sürerse 112 aranmalıdır.", "expl": "Uzamış nöbet acil müdahale gerektirir.", "answer": "5"}, {"type": "fill", "n": 13, "q": "Kan şekeri düşüklüğüne __________, kan şekeri yüksekliğine __________ denir.", "expl": "Her iki durumda da ağır bilinç bozukluğu görülebilir.", "answer": "Hipoglisemi – hiperglisemi"}, {"type": "fill", "n": 14, "q": "Kan şekeri düşüklüğü olan ancak bilinci kapalı kişiye ağızdan __________ verilmez.", "expl": "Yutma refleksi bozulabileceği için aspirasyon riski vardır.", "answer": "Yiyecek veya içecek"}, {"type": "fill", "n": 15, "q": "Hayatı tehdit eden ağır alerjik reaksiyona __________ denir.", "expl": "Solunum ve dolaşım bozukluğu gelişebilir; acil değerlendirme gerektirir.", "answer": "Anafilaksi"}, {"type": "fill", "n": 16, "q": "Nefes verirken ıslık benzeri ses duyulmasına __________ adı verilir.", "expl": "Astım ve KOAH gibi hava yolu daralmasıyla ilişkili hastalıklarda görülebilir.", "answer": "Hışıltı / wheezing"}, {"type": "fill", "n": 17, "q": "Kanamanın kalp atımıyla uyumlu ve fışkırır tarzda olması genellikle __________ kanamasını düşündürür.", "expl": "Arteriyel basınç yüksek olduğu için bu özellik ortaya çıkabilir.", "answer": "Arteriyel / atardamar"}, {"type": "fill", "n": 18, "q": "Yaraya uygulanan ilk bez kana bulandığında bez kaldırılmaz; üzerine __________ yerleştirilerek basıya devam edilir.", "expl": "İlk bezin kaldırılması oluşmaya başlayan pıhtıya zarar verebilir.", "answer": "İkinci bir temiz bez / gazlı bez"}, {"type": "fill", "n": 19, "q": "Turnike uygulamasında mutlaka kayıt altına alınması gereken bilgi __________ bilgisidir.", "expl": "Bu süre sağlık ekibi tarafından bilinmelidir.", "answer": "Uygulama saati"}, {"type": "fill", "n": 20, "q": "Kopan uzuv parçası, doğrudan __________ ile temas ettirilmeden soğukta korunur.", "expl": "Doğrudan buz teması dokunun donmasına neden olabilir.", "answer": "Buz"}, {"type": "fill", "n": 21, "q": "Burun kanamasında kişi oturtulur ve başı hafifçe __________ eğilir.", "expl": "Böylece kanın boğaza akması ve yutulması azaltılır.", "answer": "Öne"}, {"type": "fill", "n": 22, "q": "Kan veya sıvı hacminin azalmasına bağlı gelişen şok __________ şok olarak adlandırılır.", "expl": "Kanamaya bağlı gelişen hemorajik şok, hipovolemik şokun bir alt türüdür.", "answer": "Hipovolemik"}, {"type": "fill", "n": 23, "q": "Kalbin pompalama işlevinin bozulmasıyla gelişen şok __________ şoktur.", "expl": "Ağır kalp krizi kardiyojenik şoka yol açabilir.", "answer": "Kardiyojenik"}, {"type": "fill", "n": 24, "q": "Akciğer damarının pıhtıyla tıkanması sonucunda gelişebilen şok __________ şoktur.", "expl": "Dolaşımdaki mekanik engel kan akımını azaltabilir.", "answer": "Obstrüktif"}, {"type": "fill", "n": 25, "q": "Enfeksiyonlara bağlı gelişen ağır dolaşım bozukluğu __________ şok olarak adlandırılır.", "expl": "Septik şok, dağılım bozukluğu ile ilişkili şok grubundadır.", "answer": "Septik"}, {"type": "fill", "n": 26, "q": "Kalp krizi sırasında göğüs ağrısı omuz, kol, sırt, boyun ve __________ bölgesine yayılabilir.", "expl": "Göğüs ağrısının çeneye yayılması kalp krizi açısından uyarıcı olabilir.", "answer": "Çene"}, {"type": "fill", "n": 27, "q": "Şokta hızlı ve __________ nabız, dolaşım yetersizliğine işaret edebilir.", "expl": "Dolaşımdaki bozulma sırasında nabız hızlanabilir ve dolgunluğu azalabilir.", "answer": "Zayıf"}, {"type": "fill", "n": 28, "q": "Bilinç kaybı sonrasında kişi normal solumuyorsa gecikmeden __________ desteğine başlanmalıdır.", "expl": "112 çağrısı ve varsa AED kullanımıyla birlikte TYD hayat kurtarıcıdır.", "answer": "Temel Yaşam"}, {"type": "fill", "n": 29, "q": "Vücuda saplanmış yabancı cisim çıkarılmaz; bulunduğu pozisyonda __________.", "expl": "Çıkarılması çevre dokulara zarar vererek kanamayı artırabilir.", "answer": "Sabitlenir"}, {"type": "fill", "n": 30, "q": "Şokta dolaşım bozukluğu nedeniyle dokuların ihtiyacı olan __________ yeterince karşılanamaz.", "expl": "Şokun temelinde organ ve dokuların yetersiz perfüzyonu bulunur.", "answer": "Oksijen"}];
+
+const SETS = [
+  {id:'all', name:'Tüm sorular', desc:'Karışık soru tipleri', f:()=>true},
+  {id:'mc', name:'Çoktan seçmeli', desc:'5 seçenekten doğruyu seç', f:q=>q.type==='mc'},
+  {id:'tf', name:'Doğru – Yanlış', desc:'İfade doğru mu, yanlış mı?', f:q=>q.type==='tf'},
+  {id:'fill', name:'Boşluk doldurma', desc:'Eksik kelimeyi yaz', f:q=>q.type==='fill'},
+];
+const TYPE_LABEL = {mc:'Çoktan seçmeli', tf:'Doğru – Yanlış', fill:'Boşluk doldurma'};
+
+// Extra accepted answers for fill-in questions (keyed by question number)
+const EXTRA = {
+  3:['derlenme pozisyonu','sabit yan yatış','koma pozisyonu'],
+  8:['kaşık tekniği'],
+  11:['zaman','time'],
+  14:['yiyecek','içecek','yiyecek ve içecek','hiçbir şey','bir şey','gıda'],
+  18:['bez','temiz bez','gazlı bez','ikinci bez','ikinci bir bez','yeni bez','ek bez'],
+  19:['saat','uygulama saati','zaman','uygulama zamanı'],
+  21:['ileri'],
+  28:['temel yaşam','tyd','temel yaşam desteği'],
+  29:['sabitlenmeli','sabitlenir','sabitlenmelidir','sabitle'],
+};
+
+const $ = id => document.getElementById(id);
+let selected = 'all', queue = [], idx = 0, ok = 0, wrongList = [], state = null;
+
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function norm(s){
+  return s.toLocaleLowerCase('tr').replace(/[çğıöşüâîû]/g,c=>({'ç':'c','ğ':'g','ı':'i','ö':'o','ş':'s','ü':'u','â':'a','î':'i','û':'u'}[c]))
+    .replace(/['’`".,;:!?()%-]/g,' ').replace(/\s+/g,' ').trim();
+}
+function lev(a,b){
+  const m=a.length,n=b.length; if(!m) return n; if(!n) return m;
+  let p=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}
+  return p[n];
+}
+function matches(input, alts){
+  const x = norm(input); if(!x) return false;
+  return alts.some(a=>{
+    a = norm(a); if(!a) return false;
+    if(x===a) return true;
+    // typed answer contains the expected answer, e.g. "derlenme pozisyonu"
+    if(a.length>=3 && (' '+x+' ').includes(' '+a)) return true;
+    const tol = a.length>=8 ? 2 : a.length>=4 ? 1 : 0;
+    if(lev(x,a)<=tol) return true;
+    // typed answer starts with the expected word but has a suffix (Turkish inflection)
+    if(a.length>=5 && x.startsWith(a) && x.length-a.length<=4) return true;
+    return false;
+  });
+}
+// Build per-blank accepted answers
+function fillAlts(q){
+  const blanks = (q.q.match(/_{3,}/g)||[]).length || 1;
+  const parts = blanks>1 ? q.answer.split(/\s+[–-]\s+/) : [q.answer];
+  return parts.map((p,i)=>{
+    const alts = p.split('/').map(s=>s.trim()).filter(Boolean);
+    if(blanks===1 && EXTRA[q.n]) alts.push(...EXTRA[q.n]);
+    return alts;
+  });
+}
+
+function renderSets(){
+  $('sets').innerHTML = SETS.map(s=>`<button class="set${s.id===selected?' sel':''}" data-id="${s.id}"><div><b>${s.name}</b><span>${s.desc}</span></div><div class="count">${DATA.filter(s.f).length}</div></button>`).join('');
+  $('sets').querySelectorAll('.set').forEach(b=>b.onclick=()=>{selected=b.dataset.id;renderSets();});
+}
+
+function show(id){['start','quiz','end'].forEach(s=>$(s).classList.toggle('hidden',s!==id));window.scrollTo(0,0);}
+
+function begin(list){
+  queue = $('shuffle').checked ? shuffle(list) : list.slice();
+  idx = 0; ok = 0; wrongList = [];
+  show('quiz'); renderQ();
+}
+
+function renderQ(){
+  const q = queue[idx];
+  state = {q, answered:false, correct:null, revealed:false};
+  $('bar').style.width = (idx/queue.length*100)+'%';
+  $('pos').textContent = `${idx+1} / ${queue.length} · ✓ ${ok}`;
+  $('tag').textContent = TYPE_LABEL[q.type];
+  $('qnum').textContent = `Soru ${q.n}`;
+  $('feedback').className='feedback hidden';
+  $('reveal').className='reveal hidden';
+  const A = $('answers');
+  if(q.type==='mc'){
+    $('qtext').textContent = q.q;
+    A.innerHTML = `<div class="opts">${q.options.map(([k,t])=>`<button class="opt" data-k="${k}"><span class="k">${k}</span><span>${esc(t)}</span></button>`).join('')}</div>`;
+    A.querySelectorAll('.opt').forEach(b=>b.onclick=()=>chooseOpt(b.dataset.k));
+  } else if(q.type==='tf'){
+    $('qtext').textContent = q.q;
+    A.innerHTML = `<div class="opts tf"><button class="opt" data-k="D">Doğru</button><button class="opt" data-k="Y">Yanlış</button></div>`;
+    A.querySelectorAll('.opt').forEach(b=>b.onclick=()=>chooseOpt(b.dataset.k));
+  } else {
+    let i=0;
+    $('qtext').innerHTML = esc(q.q).replace(/_{3,}/g,()=>`<span class="blank">${(q.q.match(/_{3,}/g).length>1)?'('+(++i)+')':''}</span>`);
+    const alts = fillAlts(q);
+    A.innerHTML = `<div class="fill">${alts.map((_,j)=>`${alts.length>1?`<label for="in${j}">Boşluk ${j+1}</label>`:''}<input id="in${j}" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Cevabını yaz…" aria-label="Cevap ${j+1}">`).join('')}</div>`;
+    A.querySelectorAll('input').forEach(inp=>inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();e.stopPropagation();state.answered?next():checkFill();}}));
+    setTimeout(()=>{const f=$('in0'); if(f && matchMedia('(pointer:fine)').matches) f.focus();},0);
+  }
+  setActions();
+}
+
+function correctKey(q){return q.type==='mc'?q.answer:(q.answer?'D':'Y');}
+function correctText(q){
+  if(q.type==='mc') return q.answer+') '+q.options.find(o=>o[0]===q.answer)[1];
+  if(q.type==='tf') return q.answer?'DOĞRU':'YANLIŞ';
+  return q.answer;
+}
+
+function chooseOpt(k){
+  if(state.answered) return;
+  const q = state.q, ck = correctKey(q);
+  state.answered = true; state.correct = (k===ck);
+  $('answers').querySelectorAll('.opt').forEach(b=>{
+    b.disabled = true;
+    if(b.dataset.k===k) b.classList.add(state.correct?'ok':'bad');
+    else if(!state.correct) b.classList.add('dim');
+  });
+  if(state.correct){ ok++; feedback(true); revealAnswer(false); }
+  else { wrongList.push(q); feedback(false); }
+  setActions();
+}
+
+function checkFill(){
+  if(state.answered) return;
+  const q = state.q, alts = fillAlts(q);
+  const inputs = [...$('answers').querySelectorAll('input')];
+  if(inputs.every(i=>!i.value.trim())){ inputs[0].focus(); return; }
+  const res = inputs.map((inp,j)=>matches(inp.value, alts[j]));
+  state.answered = true; state.typed = true; state.correct = res.every(Boolean);
+  inputs.forEach((inp,j)=>{inp.readOnly=true;inp.classList.add(res[j]?'ok':'bad');});
+  if(state.correct){ ok++; feedback(true); revealAnswer(false); }
+  else { wrongList.push(q); feedback(false); }
+  setActions();
+}
+
+function feedback(good){
+  const f=$('feedback'); f.className='feedback '+(good?'ok':'bad');
+  f.textContent = good ? '✓ Doğru!' : '✗ Yanlış';
+}
+
+function revealAnswer(markOpts=true){
+  const q = state.q; state.revealed = true;
+  if(markOpts && q.type!=='fill'){
+    const ck = correctKey(q);
+    $('answers').querySelectorAll('.opt').forEach(b=>{b.disabled=true; if(b.dataset.k===ck){b.classList.remove('dim');b.classList.add('ok');}});
+  }
+  const r=$('reveal'); r.className='reveal';
+  r.innerHTML = `<div class="ans">Doğru cevap: ${esc(correctText(q))}</div><div class="ex">${esc(q.expl)}</div>`;
+}
+
+function acceptAnyway(){
+  // user's fill-in answer was marked wrong but they consider it correct
+  ok++; wrongList.pop(); state.correct = true;
+  $('answers').querySelectorAll('input').forEach(i=>{i.classList.remove('bad');i.classList.add('ok');});
+  feedback(true); setActions();
+  $('pos').textContent = `${idx+1} / ${queue.length} · ✓ ${ok}`;
+}
+
+function setActions(){
+  const a=$('actions'), q=state.q; let h='';
+  if(!state.answered){
+    if(q.type==='fill') h += `<button class="btn primary" data-a="check">Kontrol Et</button>`;
+    h += `<button class="btn" data-a="reveal">Cevabı Göster</button>`;
+  } else {
+    if(!state.correct && !state.revealed) h += `<button class="btn" data-a="reveal">Cevabı Göster</button>`;
+    h += `<button class="btn primary" data-a="next">Sonraki</button>`;
+  }
+  a.innerHTML = h;
+  a.querySelectorAll('button').forEach(b=>b.onclick=()=>act(b.dataset.a));
+  // "count as correct" link for fill-in answers marked wrong
+  const old = document.getElementById('acceptLink'); if(old) old.remove();
+  if(state.answered && !state.correct && state.typed){
+    a.insertAdjacentHTML('afterend',`<button class="link" id="acceptLink">Cevabım doğruydu, doğru say</button>`);
+    $('acceptLink').onclick=acceptAnyway;
+  }
+  const nb = a.querySelector('[data-a="next"]'); if(nb && q.type!=='fill') nb.focus({preventScroll:true});
+}
+
+function act(x){
+  if(x==='check') checkFill();
+  else if(x==='reveal'){
+    if(!state.answered){ // revealed before answering → counts as not known
+      state.answered = true; state.correct = false; wrongList.push(state.q);
+      $('answers').querySelectorAll('.opt').forEach(b=>b.disabled=true);
+      $('answers').querySelectorAll('input').forEach(i=>i.readOnly=true);
+    }
+    revealAnswer(true); setActions();
+  }
+  else if(x==='next') next();
+}
+
+function next(){
+  idx++;
+  if(idx>=queue.length) return finish();
+  renderQ();
+}
+
+function finish(){
+  const tot = queue.length;
+  $('pct').textContent = Math.round(ok/tot*100)+'%';
+  $('sOk').textContent = ok; $('sBad').textContent = tot-ok; $('sTot').textContent = tot;
+  $('retryWrong').classList.toggle('hidden', wrongList.length===0);
+  $('bar').style.width='100%';
+  show('end');
+}
+
+document.addEventListener('keydown',e=>{
+  if($('quiz').classList.contains('hidden') || !state) return;
+  if(e.target.tagName==='INPUT') return;
+  const k = e.key.toLocaleUpperCase('tr');
+  if(!state.answered){
+    if(state.q.type==='mc'){
+      const map={'1':'A','2':'B','3':'C','4':'D','5':'E'};
+      const key = map[k] || ('ABCDE'.includes(k)&&k.length===1?k:null);
+      if(key){e.preventDefault();chooseOpt(key);}
+    } else if(state.q.type==='tf'){
+      if(k==='D'||k==='1'){e.preventDefault();chooseOpt('D');}
+      if(k==='Y'||k==='2'){e.preventDefault();chooseOpt('Y');}
+    }
+  } else if(e.key==='Enter' && document.activeElement.tagName!=='BUTTON'){ e.preventDefault(); next(); }
+});
+
+$('startBtn').onclick=()=>begin(DATA.filter(SETS.find(s=>s.id===selected).f));
+$('menuBtn').onclick=()=>show('start');
+$('restart').onclick=()=>show('start');
+$('retryWrong').onclick=()=>begin(wrongList.slice());
+renderSets();
+</script>
+</body>
+</html>
